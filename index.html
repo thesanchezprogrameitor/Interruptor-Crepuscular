@@ -417,9 +417,10 @@ function buildTransformer() {
   for (const px of [-20.62, -20.28]) { const pr = mesh(new THREE.BoxGeometry(0.05, 0.3, 0.62), std('#cfd3d8', 0.25, 1)); pr.position.set(px, 0.3, 8.36); g.add(pr); }
   // secundario → puente (g4 y g9)
   g.add(smoothWire([V(tx + 0.4, 3.1, 0.72), V(tx + 0.5, 2.9, 1.5), V(-12.8, 0.9, 2.3), V(-10.6, 0.12, 2.2), V(-9.0, 0.3, 1.2), V(-8.5, 1.3, 0.2), V(-7.8, 1.7, -0.4), V(colX(4), 1.3, ROWZ.g), V(colX(4), 0.92, ROWZ.g)], 0.045, orange));
-  g.add(smoothWire([V(tx + 0.8, 3.1, 0.72), V(tx + 0.9, 2.9, 1.6), V(-12.4, 0.9, 2.5), V(-10.3, 0.12, 2.5), V(-8.8, 0.3, 1.6), V(-8.45, 1.45, 0.5), V(-7.4, 2.0, -0.2), V(-6.2, 1.7, -0.6), V(colX(9), 1.3, ROWZ.g), V(colX(9), 0.92, ROWZ.g)], 0.045, orange));
+  // el segundo cable entra adelante, en d9, junto a D4 (como en el diagrama)
+  g.add(smoothWire([V(tx + 0.8, 3.1, 0.72), V(tx + 0.9, 2.9, 1.6), V(-12.4, 0.9, 2.6), V(-10.3, 0.12, 2.7), V(-8.8, 0.3, 2.0), V(-8.45, 1.5, 1.4), V(-7.2, 1.9, 1.0), V(-6.2, 1.6, 0.8), V(colX(9), 1.3, ROWZ.d), V(colX(9), 0.92, ROWZ.d)], 0.045, orange));
   g.add(vCyl(0.026, BOARD_TOP - 0.25, 0.94, colX(4), ROWZ.g, tip, 8));
-  g.add(vCyl(0.026, BOARD_TOP - 0.25, 0.94, colX(9), ROWZ.g, tip, 8));
+  g.add(vCyl(0.026, BOARD_TOP - 0.25, 0.94, colX(9), ROWZ.d, tip, 8));
   return g;
 }
 
