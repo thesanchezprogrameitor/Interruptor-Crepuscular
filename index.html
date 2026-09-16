@@ -384,6 +384,19 @@ function buildBoard() {
   });
   const top = mesh(new THREE.PlaneGeometry(BW, BD), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 }), false);
   top.rotation.x = -Math.PI / 2; top.position.y = BOARD_TOP + 0.0015; g.add(top);
+  const brandTex = canvasTex(2048, 112, (x, w, h) => {
+    const a = 'UNA PIEZA ORIGINAL DE', b = 'SÁNCHEZ PROGRAMEITOR';
+    const fa = '500 38px "Segoe UI", Arial, sans-serif', fb = '800 46px "Segoe UI", Arial, sans-serif';
+    const spacing = s => { if ('letterSpacing' in x) x.letterSpacing = s; };
+    x.font = fa; spacing('5px'); const wa = x.measureText(a).width;
+    x.font = fb; spacing('7px'); const wb = x.measureText(b).width;
+    const gap = 34, start = (w - (wa + gap + wb)) / 2;
+    x.textAlign = 'left'; x.textBaseline = 'middle';
+    x.font = fa; spacing('5px'); x.fillStyle = '#9a9a93'; x.fillText(a, start, h / 2 + 2);
+    x.font = fb; spacing('7px'); x.fillStyle = '#7a7a73'; x.fillText(b, start + wa + gap, h / 2 + 2);
+  });
+  const brand = decal(brandTex, 8.4, 8.4 * 112 / 2048);
+  brand.position.set(0, 0.425, 2.652); g.add(brand);
   return g;
 }
 
