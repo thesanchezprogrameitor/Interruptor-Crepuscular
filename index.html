@@ -1,0 +1,1066 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Seguridad: la página solo puede ejecutar su propio código y el motor 3D de jsDelivr; nada más -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src data: blob:; connect-src https://cdn.jsdelivr.net; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Laboratorio 1 · Interruptor crepuscular 3D</title>
+<style>
+  :root{--ink:#14171f;--muted:#667085;--line:#e6e8ee;--card:rgba(255,255,255,.94);--accent:#2563eb}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0;height:100%;background:#fff;color:var(--ink);font:14px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;overflow:hidden}
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 30px rgba(20,23,31,.08);backdrop-filter:blur(6px)}
+  #brand{position:fixed;left:16px;top:16px;width:225px;padding:0;overflow:hidden}
+  #brandHead{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:12px 14px;cursor:pointer}
+  #brandHead:hover{background:#f7f9fc}
+  #brandHead .kicker{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  #brandHead .title{display:block;margin-top:3px;font-size:15px;font-weight:700;line-height:1.2}
+  #brandHead .chev{flex:none;font-size:11px;color:var(--muted);transition:transform .18s}
+  #brand.open #brandHead .chev{transform:rotate(180deg)}
+  #parts{border-top:1px solid var(--line);padding:8px;max-height:min(50vh,400px);overflow:auto}
+  #parts h2{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:2px 6px 6px}
+  #partList{list-style:none;margin:0;padding:0}
+  #partList button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;padding:6px 8px;border-radius:9px;cursor:pointer;font-size:13px}
+  #partList button:hover{background:#f2f5fb}
+  #partList button.sel{background:#e8efff;color:#1d4ed8;font-weight:600}
+  .num{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff}
+  #info{position:fixed;right:16px;top:16px;width:340px;padding:16px 18px;max-height:calc(100vh - 32px - 215px);overflow:auto}
+  #info .x{position:absolute;right:10px;top:8px;border:0;background:none;font-size:22px;color:var(--muted);cursor:pointer}
+  #info .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:#eef2ff;color:#3730a3}
+  #info h2{margin:8px 0 4px;font-size:19px;line-height:1.25}
+  #info .spec{font-size:12px;color:var(--muted);margin-bottom:10px}
+  #info h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 4px}
+  #info p{margin:0}
+  #info .tip{margin-top:12px;padding:9px 11px;border-radius:10px;background:#fff7e6;border:1px solid #fde3a7;font-size:13px}
+  #info .nav{display:flex;justify-content:space-between;margin-top:14px;gap:8px}
+  button.b{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 11px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink)}
+  button.b:hover{border-color:#c7cfdd;background:#f7f9fc}
+  button.b.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  button.b.off{background:#fee2e2;border-color:#fecaca;color:#991b1b}
+  #bottom{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);width:min(1120px,calc(100% - 28px));display:flex;gap:12px;align-items:flex-end}
+  .cardHead{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:9px 14px;cursor:pointer}
+  .cardHead:hover{background:#f7f9fc}
+  .cardHead .title{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .cardHead .chev{font-size:10px;color:var(--muted);transition:transform .18s}
+  .card.open .cardHead .chev{transform:rotate(180deg)}
+  #dock{flex:1 1 auto;padding:0;overflow:hidden}
+  #dockBody{border-top:1px solid var(--line);padding:9px 14px 11px;display:grid;grid-template-columns:1fr 1fr;gap:4px 20px}
+  #meter{flex:0 0 335px;padding:0;overflow:hidden}
+  #meterBody{border-top:1px solid var(--line);padding:8px 10px 10px}
+  .ctrl label{display:flex;justify-content:space-between;font-weight:600;font-size:12.5px}
+  .ctrl b{font-variant-numeric:tabular-nums;color:var(--accent)}
+  .ctrl input{width:100%;margin:5px 0 1px;accent-color:var(--accent)}
+  .scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)}
+  .readouts{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+  .readouts div{background:#f6f8fb;border-radius:8px;padding:4px 7px}
+  .readouts small{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .readouts b{font-variant-numeric:tabular-nums;font-size:13px}
+  .state{margin-top:6px;padding:5px 8px;border-radius:8px;text-align:center;font-weight:700;font-size:12px;background:#eaf2ff;color:#1e40af}
+  .state.night{background:#dcfce7;color:#166534}
+  .btns{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:7px;padding-top:6px}
+  #labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+  .label{position:absolute;left:0;top:0;white-space:nowrap;font-size:11.5px;font-weight:600;padding:3px 8px 3px 3px;border-radius:99px;background:rgba(255,255,255,.95);border:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;align-items:center;gap:5px;pointer-events:auto;cursor:pointer}
+  .label .num{width:18px;height:18px;font-size:10px}
+  #tooltip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;padding:4px 8px;border-radius:6px;transform:translate(12px,12px)}
+  #loading{position:fixed;inset:0;display:grid;place-items:center;background:#fff;font-weight:600;color:var(--muted)}
+  #togParts{display:none}
+  @media (max-width:820px){
+    #brand{width:auto;right:16px}
+    .scale{display:none}
+    #togParts{display:inline-block}
+    #parts{max-height:40vh}
+    #info{left:16px;right:16px;width:auto;top:80px;max-height:45vh}
+    #bottom{flex-direction:column;align-items:stretch;bottom:8px;gap:8px}
+    #meter{flex:1 1 auto}
+    #dockBody{grid-template-columns:1fr;gap:4px}
+    .btns{padding-top:6px;gap:6px}
+    button.b{padding:5px 8px;font-size:12px}
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+
+<aside id="brand" class="card">
+  <button id="brandHead" aria-expanded="false">
+    <span>
+      <span class="kicker">Laboratorio 1 · 3D</span>
+      <span class="title">INTERRUPTOR CREPUSCULAR</span>
+    </span>
+    <span class="chev">▼</span>
+  </button>
+  <div id="parts" hidden>
+    <h2>Materiales</h2>
+    <ol id="partList"></ol>
+  </div>
+</aside>
+
+<aside id="info" class="card" hidden>
+  <button class="x" id="infoClose" aria-label="Cerrar">×</button>
+  <span class="tag" id="infoTag"></span>
+  <h2 id="infoName"></h2>
+  <p id="infoDesc"></p>
+  <div class="tip" id="infoTip"></div>
+  <div class="nav"><button class="b" id="prev">← Anterior</button><button class="b" id="next">Siguiente →</button></div>
+</aside>
+
+<div id="bottom">
+  <div id="dock" class="card open">
+    <button class="cardHead" id="dockHead" aria-expanded="true"><span class="title">Controles</span><span class="chev">▼</span></button>
+    <div id="dockBody">
+      <div class="ctrl">
+        <label for="light"><span>☀️ Luz sobre la LDR</span><b id="luxOut"></b></label>
+        <input type="range" id="light" min="0" max="100" step="0.1" value="80">
+        <div class="scale"><span>Noche</span><span>Día</span></div>
+      </div>
+      <div class="ctrl">
+        <label for="rv"><span>🎚️ RV1 (sensibilidad)</span><b id="rvOut"></b></label>
+        <input type="range" id="rv" min="0" max="100" step="0.1" value="50">
+        <div class="scale"><span>Enciende con penumbra</span><span>Solo noche cerrada</span></div>
+      </div>
+      <div class="btns">
+        <button class="b" id="togParts">Piezas</button>
+        <button class="b" id="btnCycle">▶ Ciclo día/noche</button>
+        <button class="b" id="btnExplode">Vista explosionada</button>
+        <button class="b" id="btnLabels">Etiquetas</button>
+        <button class="b" id="btnReset">Reiniciar vista</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="meter" class="card">
+    <button class="cardHead" id="meterHead" aria-expanded="false"><span class="title">Medidas</span><span class="chev">▼</span></button>
+    <div id="meterBody" hidden>
+      <div class="readouts">
+        <div><small>V AC sec.</small><b id="vacOut"></b></div>
+        <div><small>V DC (C1)</small><b id="vdcOut"></b></div>
+        <div><small>V zener</small><b id="vzOut"></b></div>
+        <div><small>R LDR</small><b id="rOut"></b></div>
+        <div><small>V base Q2</small><b id="vbOut"></b></div>
+        <div><small>I colector</small><b id="icOut"></b></div>
+      </div>
+      <div class="state" id="stateOut"></div>
+    </div>
+  </div>
+</div>
+
+<div id="tooltip" hidden></div>
+
+
+<div id="loading">Cargando escena 3D…</div>
+
+<script>
+  setTimeout(function(){var l=document.getElementById('loading');if(l&&!l.hidden)l.textContent='No se pudo cargar Three.js. Revisa tu conexión a internet y recarga.';},12000);
+</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+/* ---------- Renderer / escena ---------- */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#ffffff');
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.05, 400);
+const HOME = { pos: new THREE.Vector3(-8.0, 24.5, 25), target: new THREE.Vector3(-7.6, -1.8, 2.8) };
+camera.position.copy(HOME.pos);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(HOME.target);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;          // más deslizamiento, movimiento menos brusco
+controls.minDistance = 1.2;
+controls.maxDistance = 55;
+controls.maxPolarAngle = Math.PI * 0.49;
+controls.zoomToCursor = true;          // el zoom va hacia donde apunta el cursor
+controls.screenSpacePanning = true;
+controls.zoomSpeed = 0.6;
+controls.rotateSpeed = 0.45;
+controls.panSpeed = 0.8;
+// que la vista no se pierda fuera de la mesa
+const LIM = { x: [-22, 10], y: [-1.5, 6], z: [-8, 10] };
+function clampTarget() {
+  const t = controls.target;
+  t.x = THREE.MathUtils.clamp(t.x, LIM.x[0], LIM.x[1]);
+  t.y = THREE.MathUtils.clamp(t.y, LIM.y[0], LIM.y[1]);
+  t.z = THREE.MathUtils.clamp(t.z, LIM.z[0], LIM.z[1]);
+}
+
+const hemi = new THREE.HemisphereLight('#ffffff', '#e9dcc8', 0.6);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight('#fff4e6', 2.4);
+sun.position.set(4, 24, 13);
+sun.target.position.set(-5, 0, 0);
+scene.add(sun.target);
+sun.castShadow = true;
+sun.shadow.mapSize.set(4096, 4096);   // sombras finas: ya solo se calculan cuando algo se mueve
+Object.assign(sun.shadow.camera, { left: -26, right: 26, top: 20, bottom: -20, near: 1, far: 90 });
+sun.shadow.camera.updateProjectionMatrix();
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.02;
+sun.shadow.radius = 3;
+sun.shadow.autoUpdate = false;    // la sombra solo se recalcula cuando algo se mueve de verdad
+sun.shadow.needsUpdate = true;
+scene.add(sun);
+const fill = new THREE.DirectionalLight('#dfe8ff', 0.5);
+fill.position.set(-16, 9, -8);
+scene.add(fill);
+
+/* ---------- Helpers ---------- */
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const std = (color, roughness = 0.5, metalness = 0, extra = {}) =>
+  new THREE.MeshStandardMaterial({ color, roughness, metalness, ...extra });
+const TIN_SRC = std('#d5d8dd', 0.3, 1);
+const TIN = () => TIN_SRC;            // material compartido: permite unir las mallas
+function mesh(geo, mat, cast = true) {
+  const m = new THREE.Mesh(geo, mat);
+  m.castShadow = cast; m.receiveShadow = true;
+  return m;
+}
+function vCyl(r, y0, y1, x, z, mat, seg = 12) {
+  const m = mesh(new THREE.CylinderGeometry(r, r, y1 - y0, seg), mat);
+  m.position.set(x, (y0 + y1) / 2, z);
+  return m;
+}
+function canvasTex(w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+}
+function decal(tex, w, h) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
+    new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.6, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
+  m.userData.noHighlight = true;
+  return m;
+}
+function textTex(w, h, lines, color = '#fff', bg = null) {
+  return canvasTex(w, h, (x) => {
+    if (bg) { x.fillStyle = bg; x.fillRect(0, 0, w, h); }
+    x.fillStyle = color; x.textAlign = 'center'; x.textBaseline = 'middle';
+    lines.forEach(([txt, font, y]) => { x.font = font; x.fillText(txt, w / 2, y); });
+  });
+}
+function roundedPath(raw, rad) {
+  const pts = raw.filter((p, i) => i === 0 || p.distanceTo(raw[i - 1]) > 1e-4);
+  const path = new THREE.CurvePath();
+  let cur = pts[0].clone();
+  for (let i = 1; i < pts.length - 1; i++) {
+    const p = pts[i];
+    const dIn = p.clone().sub(pts[i - 1]); const lIn = dIn.length(); dIn.normalize();
+    const dOut = pts[i + 1].clone().sub(p); const lOut = dOut.length(); dOut.normalize();
+    const r = Math.min(rad, lIn * 0.45, lOut * 0.45);
+    const a = p.clone().addScaledVector(dIn, -r), b = p.clone().addScaledVector(dOut, r);
+    if (cur.distanceTo(a) > 1e-4) path.add(new THREE.LineCurve3(cur.clone(), a));
+    path.add(new THREE.QuadraticBezierCurve3(a, p.clone(), b));
+    cur = b;
+  }
+  const end = pts[pts.length - 1];
+  if (cur.distanceTo(end) > 1e-4) path.add(new THREE.LineCurve3(cur, end.clone()));
+  return path;
+}
+function tubeAlong(pts, r, mat, rad = 0.07) {
+  const path = roundedPath(pts, rad);
+  return mesh(new THREE.TubeGeometry(path, Math.max(18, Math.ceil(path.getLength() * 42)), r, 10, false), mat);
+}
+function smoothWire(pts, r, mat) {
+  const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+  return mesh(new THREE.TubeGeometry(curve, 160, r, 10, false), mat);
+}
+
+/* ---------- Geometría de la protoboard (830 puntos) ---------- */
+const P = 0.254;                 // paso 2,54 mm (1 unidad = 1 cm)
+const BOARD_TOP = 0.85;
+const colX = c => (c - 32) * P;
+// buses: atrás − afuera (C) y + adentro (A/B); adelante igual orden: − adentro (E) y + afuera (D)
+const ROWZ = { a: 1.416, b: 1.162, c: 0.908, d: 0.654, e: 0.4, f: -0.4, g: -0.654, h: -0.908, i: -1.162, j: -1.416,
+  'B-': 2.0, 'B+': 2.254, 'T+': -2.0, 'T-': -2.254 };
+const hole = (c, r) => V(colX(c), BOARD_TOP, ROWZ[r]);
+
+/* ---------- Mesa ---------- */
+function buildTable() {
+  const wood = canvasTex(2048, 1024, (x, w, h) => {
+    x.fillStyle = '#c8935b'; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 420; i++) {
+      const y = Math.random() * h;
+      x.strokeStyle = Math.random() < 0.8 ? `rgba(95,55,22,${0.04 + Math.random() * 0.1})` : `rgba(255,225,180,${0.06 + Math.random() * 0.08})`;
+      x.lineWidth = 1 + Math.random() * 3.5;
+      x.beginPath();
+      for (let px = 0; px <= w; px += 16) x.lineTo(px, y + Math.sin(px * 0.004 + i) * 7 + Math.sin(px * 0.017 + i * 2) * 2);
+      x.stroke();
+    }
+  });
+  const g = new THREE.Group();
+  const top = mesh(new THREE.BoxGeometry(40, 0.8, 24), std('#ffffff', 0.62, 0, { map: wood, bumpMap: wood, bumpScale: 0.035 }), false);
+  top.position.set(-5, -0.4, 1); g.add(top);
+  // sombras de contacto: hacen que la placa y el transformador se "apoyen" de verdad
+  const blur = canvasTex(256, 256, (x, w, h) => {
+    const gr = x.createRadialGradient(w / 2, h / 2, w * 0.12, w / 2, h / 2, w / 2);
+    gr.addColorStop(0, 'rgba(0,0,0,.40)'); gr.addColorStop(0.55, 'rgba(0,0,0,.14)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = gr; x.fillRect(0, 0, w, h);
+  });
+  for (const [px, pz, sx, sz] of [[0, 0, 19, 7.5], [-15, -1.5, 10, 7]]) {
+    const ao = new THREE.Mesh(new THREE.PlaneGeometry(sx, sz), new THREE.MeshBasicMaterial({ map: blur, transparent: true, depthWrite: false }));
+    ao.rotation.x = -Math.PI / 2; ao.position.set(px, 0.012, pz); ao.renderOrder = -1; g.add(ao);
+  }
+  const legMat = std('#8d5f36', 0.6);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const leg = mesh(new THREE.BoxGeometry(0.9, 12, 0.9), legMat);
+    leg.position.set(-5 + sx * 18.8, -6.8, 1 + sz * 10.8); g.add(leg);
+  }
+  const blob = canvasTex(256, 256, (x, w, h) => {
+    const gr = x.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w / 2);
+    gr.addColorStop(0, 'rgba(0,0,0,0.18)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = gr; x.fillRect(0, 0, w, h);
+  });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(62, 38), new THREE.MeshBasicMaterial({ map: blob, transparent: true, depthWrite: false }));
+  floor.rotation.x = -Math.PI / 2; floor.position.set(-5, -12.8, 1); g.add(floor);
+  return g;
+}
+scene.add(buildTable());
+
+/* ---------- Piezas ---------- */
+function buildBoard() {
+  const g = new THREE.Group();
+  const body = mesh(new RoundedBoxGeometry(16.5, 0.85, 5.3, 4, 0.08), std('#f6f6f1', 0.7));
+  body.position.y = 0.425; g.add(body);
+  const BW = 16.34, BD = 5.14, S = 230;   // textura más fina: números y agujeros nítidos de cerca
+  const tex = canvasTex(Math.round(BW * S), Math.round(BD * S), (x, w, h) => {
+    const toC = (px, pz) => [(px + BW / 2) * S, (pz + BD / 2) * S];
+    x.fillStyle = '#f6f6f1'; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#e3e3db'; x.fillRect(0, toC(0, -0.15)[1], w, 0.3 * S);
+    x.fillStyle = '#cfcfc6'; x.fillRect(0, toC(0, -0.15)[1], w, 3); x.fillRect(0, toC(0, 0.15)[1] - 3, w, 3);
+    const hline = (z, col) => {
+      x.fillStyle = col;
+      const y = (z + BD / 2) * S - 0.018 * S, xs = toC(colX(29.6), 0)[0], xe = toC(colX(30.4), 0)[0];
+      x.fillRect(toC(-8.0, 0)[0], y, xs - toC(-8.0, 0)[0], 0.036 * S);
+      x.fillRect(xe, y, toC(8.0, 0)[0] - xe, 0.036 * S);
+    };
+    hline(-1.76, '#e0413a'); hline(-2.48, '#2f66d8'); hline(1.76, '#2f66d8'); hline(2.48, '#e0413a');
+    const holeAt = (px, pz) => {
+      const [u, v] = toC(px, pz), s = 0.1 * S;
+      x.fillStyle = '#cdcdc5'; x.fillRect(u - s / 2 - 2, v - s / 2 - 2, s + 4, s + 4);
+      x.fillStyle = '#2b2b2b'; x.fillRect(u - s / 2, v - s / 2, s, s);
+      x.fillStyle = '#5a5a5a'; x.fillRect(u - s / 2, v - s / 2, s, 3);
+    };
+    for (let c = 1; c <= 63; c++) {
+      for (const r of 'abcdefghij') holeAt(colX(c), ROWZ[r]);
+      if (c % 6 !== 0 && c < 63) for (const r of ['B+', 'B-', 'T+', 'T-']) holeAt(colX(c), ROWZ[r]);
+    }
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.font = `600 ${0.13 * S}px Arial`; x.fillStyle = '#8a8a84';
+    for (const r of 'abcdefghij') { x.fillText(r, ...toC(-8.1, ROWZ[r])); x.fillText(r, ...toC(8.1, ROWZ[r])); }
+    x.font = `600 ${0.11 * S}px Arial`;
+    for (const c of [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]) { x.fillText(String(c), ...toC(colX(c), -1.6)); x.fillText(String(c), ...toC(colX(c), 1.6)); }
+    x.font = `700 ${0.16 * S}px Arial`;
+    for (const sx of [-8.1, 8.1]) {
+      x.fillStyle = '#e0413a'; x.fillText('+', ...toC(sx, -2.0)); x.fillText('+', ...toC(sx, 2.254));
+      x.fillStyle = '#2f66d8'; x.fillText('−', ...toC(sx, -2.254)); x.fillText('−', ...toC(sx, 2.0));
+    }
+  });
+  const top = mesh(new THREE.PlaneGeometry(BW, BD), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 }), false);
+  top.rotation.x = -Math.PI / 2; top.position.y = BOARD_TOP + 0.0015; g.add(top);
+  return g;
+}
+
+function buildTransformer() {
+  const g = new THREE.Group();
+  const tx = -15, tz = -1.5, H = 4.2, yc = 0.1 + H / 2;
+  const lamTex = canvasTex(512, 512, (x, w, h) => {
+    x.fillStyle = '#6b7079'; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < h; i += 6) { x.fillStyle = i % 12 ? 'rgba(0,0,0,.2)' : 'rgba(255,255,255,.08)'; x.fillRect(0, i, w, 3); }
+  });
+  const core = mesh(new THREE.BoxGeometry(5.0, H, 2.6), std('#ffffff', 0.45, 0.7, { map: lamTex }));
+  core.position.set(tx, yc, tz); g.add(core);
+  const coil = mesh(new RoundedBoxGeometry(2.5, 2.7, 4.4, 3, 0.25), std('#e9c84a', 0.55));
+  coil.position.set(tx, yc, tz); g.add(coil);
+  const frameM = std('#b9bec5', 0.4, 0.9);
+  const strap = mesh(new THREE.BoxGeometry(5.2, 0.1, 2.8), frameM); strap.position.set(tx, 0.1 + H + 0.05, tz); g.add(strap);
+  const feet = mesh(new THREE.BoxGeometry(7.2, 0.1, 2.8), frameM); feet.position.set(tx, 0.05, tz); g.add(feet);
+  for (const sx of [-1, 1]) {
+    const side = mesh(new THREE.BoxGeometry(0.1, H, 2.8), frameM); side.position.set(tx + sx * 2.55, yc, tz); g.add(side);
+    g.add(vCyl(0.16, 0.1, 0.12, tx + sx * 3.15, tz, std('#3a3a3a', 0.8), 16));
+  }
+  const lab = decal(textTex(512, 384, [['TR1', 'bold 64px Arial', 70], ['PRI 127 V~', '44px Arial', 170], ['SEC 12 V~', '44px Arial', 240], ['500 mA', '44px Arial', 310]], '#111', '#ffffff'), 1.6, 1.2);
+  lab.position.set(tx, 2.0, tz + 2.202); g.add(lab);
+  const black = std('#1c1c1c', 0.5), orange = std('#f28c28', 0.45), tip = TIN();
+  // primario → cinta aislante → cable → enchufe
+  g.add(smoothWire([V(tx - 0.8, 3.1, 0.72), V(tx - 0.9, 2.8, 1.5), V(-16.6, 0.6, 2.3), V(-17.0, 0.2, 2.85)], 0.05, black));
+  g.add(smoothWire([V(tx - 0.4, 3.1, 0.72), V(tx - 0.5, 2.8, 1.6), V(-16.3, 0.6, 2.5), V(-16.9, 0.2, 2.95)], 0.05, black));
+  g.add(tubeAlong([V(-16.95, 0.2, 2.8), V(-17.35, 0.2, 3.6)], 0.17, std('#111', 0.35)));
+  g.add(smoothWire([V(-17.3, 0.2, 3.45), V(-17.8, 0.14, 4.4), V(-19.2, 0.13, 5.4), V(-20.2, 0.13, 6.3), V(-20.45, 0.3, 6.95)], 0.1, std('#e5e5e5', 0.6)));
+  const plug = mesh(new RoundedBoxGeometry(0.95, 0.6, 1.1, 2, 0.12), std('#202020', 0.5)); plug.position.set(-20.45, 0.3, 7.5); g.add(plug);
+  for (const px of [-20.62, -20.28]) { const pr = mesh(new THREE.BoxGeometry(0.05, 0.3, 0.62), std('#cfd3d8', 0.25, 1)); pr.position.set(px, 0.3, 8.36); g.add(pr); }
+  // secundario → puente (g4 y g9)
+  g.add(smoothWire([V(tx + 0.4, 3.1, 0.72), V(tx + 0.5, 2.9, 1.5), V(-12.8, 0.9, 2.3), V(-10.6, 0.12, 2.2), V(-9.0, 0.3, 1.2), V(-8.5, 1.3, 0.2), V(-7.8, 1.7, -0.4), V(colX(4), 1.3, ROWZ.g), V(colX(4), 0.92, ROWZ.g)], 0.045, orange));
+  g.add(smoothWire([V(tx + 0.8, 3.1, 0.72), V(tx + 0.9, 2.9, 1.6), V(-12.4, 0.9, 2.5), V(-10.3, 0.12, 2.5), V(-8.8, 0.3, 1.6), V(-8.45, 1.45, 0.5), V(-7.4, 2.0, -0.2), V(-6.2, 1.7, -0.6), V(colX(9), 1.3, ROWZ.g), V(colX(9), 0.92, ROWZ.g)], 0.045, orange));
+  g.add(vCyl(0.026, BOARD_TOP - 0.25, 0.94, colX(4), ROWZ.g, tip, 8));
+  g.add(vCyl(0.026, BOARD_TOP - 0.25, 0.94, colX(9), ROWZ.g, tip, 8));
+  return g;
+}
+
+const DB_SRC = std('#1b1b1b', 0.35), DBAND_SRC = std('#cfcfcf', 0.4);
+const DIODE_BODY = () => DB_SRC, DIODE_BAND = () => DBAND_SRC;
+function buildAxial(A, B, o) { // A = ánodo, B = cátodo (franja)
+  const g = new THREE.Group(); const y = 1.0;
+  g.add(tubeAlong([V(A.x, BOARD_TOP - 0.2, A.z), V(A.x, y, A.z), V(B.x, y, B.z), V(B.x, BOARD_TOP - 0.2, B.z)], 0.035, TIN(), 0.08));
+  const dir = B.clone().sub(A); dir.y = 0; dir.normalize();
+  const mid = V((A.x + B.x) / 2, y, (A.z + B.z) / 2);
+  const q = new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), dir);
+  if (o.at !== undefined) mid.lerpVectors(V(A.x, y, A.z), V(B.x, y, B.z), o.at);   // cuerpo corrido sobre las patas
+  const body = mesh(new THREE.CylinderGeometry(o.r, o.r, o.len, 26), o.body); body.quaternion.copy(q); body.position.copy(mid); g.add(body);
+  const band = mesh(new THREE.CylinderGeometry(o.r + 0.004, o.r + 0.004, o.len * 0.16, 26), o.band); band.quaternion.copy(q); band.position.copy(mid).addScaledVector(dir, o.len * 0.34); g.add(band);
+  return g;
+}
+function buildHairpin(A, B, o) { // A = pata bajo el cuerpo (ánodo), B = pata que da la vuelta (cátodo)
+  const g = new THREE.Group();
+  const y0 = 1.0, y1 = y0 + o.len, yt = y1 + 0.18;
+  g.add(tubeAlong([V(A.x, BOARD_TOP - 0.2, A.z), V(A.x, yt, A.z), V(B.x, yt, B.z), V(B.x, BOARD_TOP - 0.2, B.z)], 0.035, TIN(), 0.1));
+  const body = mesh(new THREE.CylinderGeometry(o.r, o.r, o.len, 26), o.body); body.position.set(A.x, (y0 + y1) / 2, A.z); g.add(body);
+  const band = mesh(new THREE.CylinderGeometry(o.r + 0.004, o.r + 0.004, o.len * 0.16, 26), o.band); band.position.set(A.x, y1 - o.len * 0.14, A.z); g.add(band);
+  return g;
+}
+function buildBridge() {
+  const g = new THREE.Group();
+  const o = () => ({ r: 0.135, len: 0.52, body: DIODE_BODY(), band: DIODE_BAND() });
+  g.add(buildAxial(hole(4, 'h'), hole(4, 'T+'), o()));   // D1: franja hacia +13,3 V (atrás)
+  g.add(buildAxial(hole(9, 'h'), hole(9, 'T+'), o()));   // D2
+  g.add(buildAxial(hole(4, 'B-'), hole(4, 'c'), o()));   // D3: franja hacia la entrada AC, ánodo a GND (adelante)
+  g.add(buildAxial(hole(9, 'B-'), hole(9, 'c'), o()));   // D4
+  return g;
+}
+
+function buildCap() {
+  const g = new THREE.Group();
+  // atraviesa el canal: pata + en f13 (atrás) y pata − en e13 (adelante)
+  const xc = colX(13), z = 0, yb = 1.05, H = 3.15, R = 0.8;
+  g.add(vCyl(0.03, BOARD_TOP - 0.2, yb + 0.05, xc, ROWZ.f, TIN(), 8));
+  g.add(vCyl(0.03, BOARD_TOP - 0.2, yb + 0.05, xc, ROWZ.e, TIN(), 8));
+  const sleeve = canvasTex(1024, 512, (x, w, h) => {
+    x.fillStyle = '#161a22'; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#9aa3ad'; x.fillRect(0, 0, 80, h); x.fillRect(w - 80, 0, 80, h);   // franja − hacia adelante
+    x.fillStyle = '#161a22'; x.font = 'bold 80px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    for (let i = 0; i < 5; i++) { x.fillText('−', 40, 60 + i * 98); x.fillText('−', w - 40, 60 + i * 98); }
+    x.save(); x.translate(w * 0.17, h / 2); x.rotate(-Math.PI / 2);
+    x.fillStyle = '#e6c36a'; x.font = 'bold 54px Arial'; x.fillText('2200µF', 0, -30);
+    x.font = '40px Arial'; x.fillText('35V  105°C', 0, 30); x.restore();
+  });
+  const side = std('#ffffff', 0.4, 0, { map: sleeve });
+  const topM = std('#c9ced4', 0.3, 0.9), botM = std('#2a2a2a', 0.8);
+  const body = mesh(new THREE.CylinderGeometry(R, R, H, 48), [side, topM, botM]);
+  body.position.set(xc, yb + H / 2, z); g.add(body);
+  const rim = mesh(new THREE.TorusGeometry(R - 0.03, 0.04, 10, 44), std('#161a22', 0.5));
+  rim.rotation.x = Math.PI / 2; rim.position.set(xc, yb + H, z); g.add(rim);
+  const vent = std('#6f757c', 0.5, 0.6);
+  for (let k = 0; k < 3; k++) {
+    const v = mesh(new THREE.BoxGeometry(0.035, 0.012, 0.5), vent);
+    v.rotation.y = k * Math.PI * 2 / 3; v.position.set(xc, yb + H + 0.006, z);
+    v.translateZ(0.25); g.add(v);
+  }
+  return g;
+}
+
+function buildCement(A, B, text) {
+  const g = new THREE.Group(); const y = 1.5;
+  const alongX = Math.abs(B.x - A.x) > Math.abs(B.z - A.z);
+  // si las patas caen en filas distintas, la primera se dobla en alto hasta la fila del cuerpo
+  g.add(tubeAlong([V(A.x, BOARD_TOP - 0.2, A.z), V(A.x, y, A.z), V(A.x, y, alongX ? B.z : A.z), V(B.x, y, B.z), V(B.x, BOARD_TOP - 0.2, B.z)], 0.04, TIN(), 0.15));
+  const body = mesh(new RoundedBoxGeometry(alongX ? 2.2 : 0.95, 0.95, alongX ? 0.95 : 2.2, 3, 0.06), std('#efebe0', 0.92));
+  body.position.set((A.x + B.x) / 2, y, alongX ? B.z : (A.z + B.z) / 2); g.add(body);
+  const d = decal(textTex(512, 128, [[text, 'bold 62px Arial', 68]], '#2b2b2b'), 1.8, 0.45);
+  d.rotation.x = -Math.PI / 2; if (!alongX) d.rotation.z = Math.PI / 2;
+  d.position.set(body.position.x, y + 0.476, body.position.z); g.add(d);
+  return g;
+}
+
+function buildZener() {
+  return buildAxial(hole(32, 'c'), hole(32, 'g'), {
+    r: 0.13, len: 0.5,
+    body: new THREE.MeshPhysicalMaterial({ color: '#e0662a', roughness: 0.15, clearcoat: 1, transmission: 0.15, thickness: 0.2 }),
+    band: std('#111', 0.4),
+  });
+}
+
+function buildLDR() {
+  const g = new THREE.Group();
+  // acostada: una pata en la línea de la base (col. 38) y la otra en el nodo de RZ (col. 32)
+  const xa = colX(32), xb = colX(38), xc = colX(35), z = ROWZ.i, lead = TIN(), yh = 1.06;
+  g.add(tubeAlong([V(xa, BOARD_TOP - 0.2, z), V(xa, yh, z), V(xc - 0.16, yh, z)], 0.022, lead, 0.08));
+  g.add(tubeAlong([V(xb, BOARD_TOP - 0.2, z), V(xb, yh, z), V(xc + 0.16, yh, z)], 0.022, lead, 0.08));
+  const tex = canvasTex(256, 256, (x) => {
+    x.fillStyle = '#e6cf93'; x.fillRect(0, 0, 256, 256);
+    x.strokeStyle = '#b8461a'; x.lineWidth = 15; x.lineJoin = 'round';
+    x.beginPath();
+    const n = 7, step = 150 / n;
+    x.moveTo(62, 53);
+    for (let i = 0; i <= n; i++) { const y = 53 + i * step; x.lineTo(i % 2 ? 62 : 194, y); if (i < n) x.lineTo(i % 2 ? 62 : 194, y + step); }
+    x.stroke();
+    x.strokeStyle = '#9c7a45'; x.lineWidth = 12; x.beginPath(); x.arc(128, 128, 122, 0, Math.PI * 2); x.stroke();
+  });
+  const side = new THREE.MeshPhysicalMaterial({ color: '#d9b77a', roughness: 0.25, clearcoat: 1 });
+  const topM = new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.05 });
+  const head = mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.12, 44), [side, topM, side]);
+  head.position.set(xc, yh + 0.04, z); g.add(head);
+  return g;
+}
+
+let knob;
+function buildPot() {
+  // potenciómetro de panel: cuerpo redondo parado y eje hacia el frente
+  const g = new THREE.Group();
+  const xc = colX(36), zp = ROWZ.c, zc = zp - 0.35, yc = 1.95;
+  for (const c of [34, 36, 38]) {
+    const p = mesh(new THREE.BoxGeometry(0.06, 0.32, 0.03), TIN()); p.position.set(colX(c), 0.79, zp); g.add(p);
+    const t = mesh(new THREE.BoxGeometry(0.1, 0.35, 0.04), TIN()); t.position.set(colX(c), 1.12, zp); g.add(t);
+  }
+  const can = mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.55, 44), std('#c8a349', 0.35, 1));
+  can.rotation.x = Math.PI / 2; can.position.set(xc, yc, zc); g.add(can);
+  const back = mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.12, 40), std('#2a2a2a', 0.6));
+  back.rotation.x = Math.PI / 2; back.position.set(xc, yc, zc - 0.3); g.add(back);
+  const bush = mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.42, 28), std('#c9ced4', 0.3, 1));
+  bush.rotation.x = Math.PI / 2; bush.position.set(xc, yc, zc + 0.48); g.add(bush);
+  knob = new THREE.Group(); knob.position.set(xc, yc, zc + 0.69);
+  const shaft = mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.95, 24), std('#b9bec5', 0.35, 1));
+  shaft.rotation.x = Math.PI / 2; shaft.position.z = 0.47; knob.add(shaft);
+  for (let i = 0; i < 10; i++) {   // moleteado del eje
+    const r = mesh(new THREE.BoxGeometry(0.03, 0.03, 0.8), std('#8f949b', 0.5, 1));
+    const a = i / 10 * Math.PI * 2;
+    r.position.set(Math.cos(a) * 0.15, Math.sin(a) * 0.15, 0.5); knob.add(r);
+  }
+  g.add(knob);
+  return g;
+}
+
+function buildTO92() {
+  const g = new THREE.Group();
+  const zp = ROWZ.d, x0 = colX(44), r = 0.23, yb = 1.2, h = 0.5;
+  for (const c of [43, 44, 45]) {
+    const y0 = BOARD_TOP - 0.2, y1 = yb + 0.02;
+    const leg = mesh(new THREE.BoxGeometry(0.045, y1 - y0, 0.03), TIN()); leg.position.set(colX(c), (y0 + y1) / 2, zp); g.add(leg);
+  }
+  const s = new THREE.Shape(); s.moveTo(r, 0); s.absarc(0, 0, r, 0, Math.PI, false); s.lineTo(r, 0);
+  const body = mesh(new THREE.ExtrudeGeometry(s, { depth: h, bevelEnabled: false, curveSegments: 24 }), std('#1a1a1a', 0.45));
+  body.rotation.x = -Math.PI / 2; body.position.set(x0, yb, zp + 0.08); g.add(body);
+  const d = decal(textTex(128, 96, [['2N', 'bold 30px Arial', 30], ['3904', 'bold 30px Arial', 66]], '#cfcfcf'), 0.36, 0.27);
+  d.position.set(x0, yb + 0.25, zp + 0.082); g.add(d);
+  return g;
+}
+
+function buildD6() {
+  // del colector (al pie del relé) estirado hasta el nodo de la LDR: queda en paralelo con la bobina
+  return buildAxial(hole(45, 'e'), hole(45, 'f'), { r: 0.135, len: 0.52, body: DIODE_BODY(), band: DIODE_BAND() });
+}
+
+let relayBody;
+function buildRelay() {
+  const g = new THREE.Group();
+  const pin = TIN();
+  // 3 pines al frente (bobina−, bobina+, NC) y 2 atrás (COM y NO)
+  for (const [c, r] of [[51, 'e'], [54, 'e'], [57, 'e'], [52, 'f'], [56, 'f']]) g.add(vCyl(0.035, BOARD_TOP - 0.2, 0.92, colX(c), ROWZ[r], pin, 8));
+  relayBody = new THREE.Group(); relayBody.position.set(colX(54), 1.675, 0);
+  relayBody.add(mesh(new RoundedBoxGeometry(1.85, 1.55, 1.5, 3, 0.05), std('#1f56c9', 0.45)));
+  const d = decal(canvasTex(512, 420, (x, w, h) => {
+    x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.font = 'bold 46px Arial'; x.fillText('SRD-05VDC-SL-C', w / 2, 60);
+    x.font = '30px Arial'; x.fillText('10A 250VAC   10A 125VAC', w / 2, 125); x.fillText('10A 30VDC   10A 28VDC', w / 2, 170);
+    x.strokeStyle = '#fff'; x.lineWidth = 5;
+    x.strokeRect(150, 240, 60, 110);
+    x.beginPath(); x.moveTo(180, 240); x.lineTo(180, 215); x.moveTo(180, 350); x.lineTo(180, 380);
+    x.moveTo(300, 380); x.lineTo(300, 320); x.lineTo(350, 250); x.moveTo(360, 215); x.lineTo(360, 250); x.moveTo(250, 215); x.lineTo(250, 260); x.stroke();
+    x.setLineDash([10, 8]); x.beginPath(); x.moveTo(210, 295); x.lineTo(320, 295); x.stroke();
+  }), 1.7, 1.39);
+  d.rotation.x = -Math.PI / 2; d.position.y = 0.776; relayBody.add(d);
+  g.add(relayBody);
+  return g;
+}
+
+let ledMat, ledLight, ledGlow;
+function buildLED() {
+  const g = new THREE.Group();
+  const xa = colX(60), xb = colX(63), z = ROWZ.j, xm = (xa + xb) / 2, lead = TIN();
+  g.add(vCyl(0.022, BOARD_TOP - 0.2, 1.5, xa, z, lead, 8));
+  g.add(vCyl(0.022, BOARD_TOP - 0.2, 1.5, xb, z, lead, 8));
+  ledMat = new THREE.MeshPhysicalMaterial({ color: '#34d058', roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05, emissive: '#22ff55', emissiveIntensity: 0, transparent: true, opacity: 0.88 });
+  for (const [geo, yy] of [
+    [new THREE.CylinderGeometry(0.29, 0.29, 0.06, 40), 1.51],
+    [new THREE.CylinderGeometry(0.25, 0.25, 0.38, 40), 1.73],
+    [new THREE.SphereGeometry(0.25, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2), 1.92],
+  ]) { const m = mesh(geo, ledMat); m.position.set(xm, yy, z); m.userData.noHighlight = true; g.add(m); }
+  const cup = mesh(new THREE.CylinderGeometry(0.09, 0.05, 0.12, 20), std('#888', 0.3, 0.8)); cup.position.set(xm, 1.62, z); g.add(cup);
+  ledLight = new THREE.PointLight('#40ff70', 0, 5, 2); ledLight.position.set(xm, 2.2, z); g.add(ledLight);
+  const halo = canvasTex(128, 128, (x, w, h) => {
+    const gr = x.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+    gr.addColorStop(0, 'rgba(120,255,160,.95)'); gr.addColorStop(0.35, 'rgba(60,230,110,.45)'); gr.addColorStop(1, 'rgba(50,220,100,0)');
+    x.fillStyle = gr; x.fillRect(0, 0, w, h);
+  });
+  ledGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: halo, transparent: true, depthWrite: false, opacity: 0 }));
+  ledGlow.scale.set(1.9, 1.9, 1); ledGlow.position.set(xm, 1.95, z); g.add(ledGlow);
+  return g;
+}
+
+function buildWires() {
+  const g = new THREE.Group();
+  const BLU = '#2b6cd4', ORG = '#f28c28', GRN = '#1f9d55';
+  const list = [
+    [4, 'e', 4, 'f', BLU], [9, 'e', 9, 'f', BLU],
+    [13, 'j', 13, 'T+', BLU], [13, 'a', 13, 'B-', BLU],
+    [28, 'B-', 31, 'B-', BLU], [32, 'j', 45, 'j', BLU], [32, 'a', 32, 'B-', BLU],
+    [34, 'a', 34, 'B-', BLU], [36, 'b', 38, 'b', BLU], [38, 'd', 38, 'f', BLU],
+    [43, 'a', 43, 'B-', BLU], [44, 'a', 36, 'a', BLU],
+    [45, 'b', 51, 'b', BLU],
+    [52, 'i', 60, 'i', BLU], [63, 'a', 62, 'B-', BLU],
+  ];
+  const tip = TIN(), insCache = new Map();
+  const ins = c => { if (!insCache.has(c)) insCache.set(c, std(c, 0.45)); return insCache.get(c); };
+  for (const [c1, r1, c2, r2, col] of list) {
+    const A = hole(c1, r1), B = hole(c2, r2), hgt = BOARD_TOP + 0.12;
+    g.add(tubeAlong([V(A.x, BOARD_TOP + 0.05, A.z), V(A.x, hgt, A.z), V(B.x, hgt, B.z), V(B.x, BOARD_TOP + 0.05, B.z)], 0.034, ins(col), 0.07));
+    g.add(vCyl(0.02, BOARD_TOP - 0.2, BOARD_TOP + 0.07, A.x, A.z, tip, 8));
+    g.add(vCyl(0.02, BOARD_TOP - 0.2, BOARD_TOP + 0.07, B.x, B.z, tip, 8));
+  }
+  // cables flexibles que pasan por encima del relé (arriba de su tapa, a 3 cm)
+  const arcOver = (A, B, col, topY = 3.0) => {
+    const m1 = A.clone().lerp(B, 0.28), m2 = A.clone().lerp(B, 0.62);
+    m1.y = topY; m2.y = topY;
+    g.add(smoothWire([V(A.x, BOARD_TOP - 0.2, A.z), V(A.x, BOARD_TOP + 0.5, A.z), m1, m2,
+      V(B.x, BOARD_TOP + 0.5, B.z), V(B.x, BOARD_TOP - 0.2, B.z)], 0.045, ins(col)));
+  };
+  arcOver(hole(54, 'b'), hole(45, 'g'), ORG);      // bobina+ → columna 45 (+5,1 V)
+  arcOver(hole(57, 'b'), hole(45, 'h'), GRN);      // NC → columna 45 (+5,1 V)
+  return g;
+}
+
+/* ---------- Datos de piezas ---------- */
+const PARTS = [
+  { id: 'board', color: '#9aa1ad', short: 'Protoboard', name: 'Protoboard 830 puntos', tag: 'Base', explode: 0, build: buildBoard,
+    desc: 'Es la base donde vive el circuito. Por dentro une los agujeros de cada columna, y las líneas de los lados reparten la alimentación. Así se arma y se corrige todo sin soldar.',
+    tip: '' },
+  { id: 'tr1', color: '#c9a227', short: 'TR1', name: 'TR1 · Transformador 127 V → 12 V', tag: 'Fuente AC', explode: 1.5, build: buildTransformer,
+    desc: 'Baja el voltaje del enchufe a uno pequeño, del tamaño que el circuito puede manejar, y de paso lo separa de la red eléctrica.',
+    tip: '⚠️ Es la única parte conectada a la red: forra los empalmes y no la toques enchufada.' },
+  { id: 'bridge', color: '#3b3b3b', short: 'D1–D4', name: 'D1–D4 · Puente rectificador (4 × 1N4004)', tag: 'Rectificador', explode: 2.0, build: buildBridge,
+    desc: 'La corriente que llega del transformador va y viene. Estos cuatro diodos se turnan —dos conducen mientras los otros dos bloquean— para obligarla a salir siempre por el mismo lado.',
+    tip: '' },
+  { id: 'c1', color: '#161a22', short: 'C1 2200 µF', name: 'C1 · Capacitor 2200 µF / 35 V', tag: 'Filtro', explode: 2.2, build: buildCap,
+    desc: 'Es un pequeño tanque de energía: se llena en cada subida y suelta lo guardado en las bajadas. Así el voltaje deja de dar saltos y queda parejo.',
+    tip: '⚠️ Tiene polaridad: montado al revés puede inflarse o reventar.' },
+  { id: 'rz', color: '#a8a29e', short: 'RZ 68 Ω', name: 'RZ · Resistencia 68 Ω / 5 W', tag: 'Limitadora', explode: 2.4, build: () => buildCement(hole(18, 'T+'), hole(32, 'h'), '5W 68ΩJ'),
+    desc: 'Trabaja en pareja con el zener: se queda con el voltaje que sobra y deja pasar solo la corriente que él aguanta. Ese sobrante lo suelta en forma de calor.',
+    tip: 'Se calienta: va montada en alto, separada de la placa.' },
+  { id: 'd5', color: '#e0662a', short: 'Zener 5,1 V', name: 'D5 · Diodo Zener 1N4733A', tag: 'Regulador', explode: 2.2, build: buildZener,
+    desc: 'Se planta en un voltaje fijo y no deja que suba de ahí. Gracias a él, el sensor, el transistor y el relé siempre reciben lo mismo aunque la fuente varíe.',
+    tip: 'Va con la franja hacia el positivo, al revés que un diodo común.' },
+  { id: 'ldr', color: '#b8461a', short: 'LDR1', name: 'LDR1 · Fotorresistencia', tag: 'Sensor de luz', explode: 2.6, build: buildLDR,
+    desc: 'Es el ojo del circuito: con luz deja pasar la corriente y a oscuras se cierra. Ella es la que avisa si es de día o de noche.',
+    tip: 'Mueve el control «Luz sobre la LDR» y míralo reaccionar.' },
+  { id: 'rv1', color: '#1d4fb8', short: 'RV1 2 kΩ', name: 'RV1 · Potenciómetro 2 kΩ', tag: 'Ajuste', explode: 2.2, build: buildPot,
+    desc: 'Es la perilla de sensibilidad: ajusta con cuánta oscuridad enciende, desde el primer atardecer hasta la noche cerrada.',
+    tip: 'Gíralo con el control «RV1».' },
+  { id: 'q2', color: '#1a1a1a', short: 'Q2 2N3904', name: 'Q2 · Transistor 2N3904', tag: 'Interruptor', explode: 2.4, build: buildTO92,
+    desc: 'Es el interruptor, pero sin piezas que se muevan: toma la señal débil del sensor y con ella deja pasar la corriente grande del relé. Con luz conduce; a oscuras se corta.',
+    tip: 'Sus tres patas no son iguales: montado al revés no responde.' },
+  { id: 'd6', color: '#555', short: 'D6', name: 'D6 · Diodo 1N4004', tag: 'Protección', explode: 2.2, build: buildD6,
+    desc: 'Aquí no rectifica nada: está de guardia. Cuando el relé se apaga, su bobina devuelve un golpe de corriente, y este diodo lo desvía antes de que dañe al transistor.',
+    tip: 'Va con la franja hacia el positivo: solo actúa en el momento del corte.' },
+  { id: 'relay', color: '#1f56c9', short: 'RL2 5 V', name: 'RL2 · Relé 5 V DC', tag: 'Actuador', explode: 3.2, build: buildRelay,
+    desc: 'Es el músculo: una bobina se vuelve imán y mueve una lámina que enciende la carga, sin contacto eléctrico entre la electrónica y lo que se enciende.',
+    tip: 'La salida usa la posición de reposo: por eso enciende de noche, cuando el transistor lo suelta.' },
+  { id: 'led', color: '#22c55e', short: 'LED', name: 'LED verde 5 mm', tag: 'Salida', explode: 2.6, build: buildLED,
+    desc: 'Es la carga: se enciende cuando ya oscureció. En un montaje real aquí iría la lámpara del poste o del patio.',
+    tip: 'La pata larga es por donde entra la corriente.' },
+  { id: 'r4', color: '#78716c', short: 'R4 100 Ω', name: 'R4 · Resistencia 100 Ω / 5 W', tag: 'Limitadora', explode: 2.4, build: () => buildCement(hole(63, 'h'), hole(63, 'b'), '5W 100ΩJ'),
+    desc: 'Cuida al LED, que no sabe frenarse solo: le entrega apenas la corriente justa para que alumbre bien y no se queme.',
+    tip: '' },
+  { id: 'wires', color: '#23a55a', short: 'Cables', name: 'Cables jumper', tag: 'Conexiones', explode: 1.2, build: buildWires,
+    desc: 'Cada columna de la protoboard es una isla suelta. Estos puentes las comunican; los dos largos pasan por encima del relé para no estorbar.',
+    tip: '' },
+];
+const partById = {};
+const pickables = [];
+// une en una sola malla las piezas que comparten material: menos trabajo por cuadro
+function mergePart(g) {
+  const byMat = new Map();
+  g.updateMatrixWorld(true);
+  g.traverse(o => {
+    if (!o.isMesh || Array.isArray(o.material) || o.userData.noHighlight) return;
+    const b = byMat.get(o.material.uuid) || { mat: o.material, list: [] };
+    b.list.push(o); byMat.set(o.material.uuid, b);
+  });
+  for (const { mat, list } of byMat.values()) {
+    if (list.length < 2) continue;
+    const geos = list.map(m => m.geometry.clone().applyMatrix4(m.matrixWorld));
+    let merged = null;
+    try { merged = mergeGeometries(geos, false); } catch (_) { merged = null; }
+    geos.forEach(gg => gg.dispose());
+    if (!merged) continue;
+    const m = new THREE.Mesh(merged, mat);
+    m.castShadow = true; m.receiveShadow = true;
+    list.forEach(o => { o.removeFromParent(); o.geometry.dispose(); });
+    g.add(m);
+  }
+}
+PARTS.forEach((p, i) => {
+  p.n = i + 1;
+  const g = p.build();
+  const cache = new Map();
+  const cloned = m => { if (!cache.has(m.uuid)) cache.set(m.uuid, m.clone()); return cache.get(m.uuid); };
+  g.traverse(o => {
+    if (!o.isMesh || o.userData.noHighlight) return;
+    o.material = Array.isArray(o.material) ? o.material.map(cloned) : cloned(o.material);
+  });
+  mergePart(g);
+  g.traverse(o => { if (o.isMesh) { o.userData.partId = p.id; pickables.push(o); } });
+  scene.add(g);
+  p.group = g;
+  const box = new THREE.Box3().setFromObject(g);
+  p.anchor = V((box.min.x + box.max.x) / 2, box.max.y + 0.12, (box.min.z + box.max.z) / 2);
+  partById[p.id] = p;
+});
+partById.board.anchor.set(-7.6, 0.95, 2.75);
+partById.tr1.anchor.set(-15, 4.6, -1.5);
+partById.wires.anchor.set(colX(47), 1.1, ROWZ.i);
+
+const allMats = new Set();
+scene.traverse(o => { if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => allMats.add(m)); });
+
+/* ---------- UI: lista, etiquetas, info ---------- */
+const $ = s => document.querySelector(s);
+const listEl = $('#partList'), labelsEl = $('#labels');
+let selected = null, hovered = null, labelsOn = false, exploded = false;
+for (const p of PARTS) {
+  const li = document.createElement('li');
+  li.innerHTML = `<button data-id="${p.id}"><span class="num" style="background:${p.color}">${p.n}</span>${p.name}</button>`;
+  li.firstChild.addEventListener('click', () => select(p.id, true));
+  li.firstChild.addEventListener('mouseenter', () => { hovered = p.id; });
+  li.firstChild.addEventListener('mouseleave', () => { hovered = null; });
+  listEl.appendChild(li);
+  const lab = document.createElement('div');
+  lab.className = 'label';
+  lab.innerHTML = `<span class="num" style="background:${p.color}">${p.n}</span>${p.short}`;
+  lab.addEventListener('click', () => select(p.id, true));
+  labelsEl.appendChild(lab);
+  p.labelEl = lab;
+}
+
+function setEmissive(p, color, intensity) {
+  p.group.traverse(o => {
+    if (!o.isMesh || o.userData.noHighlight) return;
+    (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.emissive) { m.emissive.set(color); m.emissiveIntensity = intensity; } });
+  });
+}
+let hlSel = null, hlHov = null;
+function refreshHighlight(t) {
+  if (hlSel !== selected || hlHov !== hovered) {           // solo recorre las piezas que cambian
+    if (hlSel && hlSel !== selected && hlSel !== hovered) setEmissive(partById[hlSel], '#000000', 0);
+    if (hlHov && hlHov !== hovered && hlHov !== selected) setEmissive(partById[hlHov], '#000000', 0);
+    if (hovered && hovered !== selected) setEmissive(partById[hovered], '#2f6bff', 0.14);
+    hlSel = selected; hlHov = hovered;
+  }
+  if (selected) setEmissive(partById[selected], '#2f6bff', 0.18 + 0.12 * Math.sin(t * 4));
+}
+
+function select(id, focus) {
+  selected = id;
+  needsRender = true;
+  document.querySelectorAll('#partList button').forEach(b => b.classList.toggle('sel', b.dataset.id === id));
+  if (!id) { $('#info').hidden = true; return; }
+  const p = partById[id];
+  $('#infoTag').textContent = p.tag;
+  $('#infoName').textContent = `${p.n}. ${p.name}`;
+  $('#infoDesc').textContent = p.desc;
+  $('#infoTip').textContent = p.tip;
+  $('#infoTip').hidden = !p.tip;
+  $('#info').hidden = false;
+  if (innerWidth <= 820) setParts(false);
+  if (focus) focusPart(p);
+}
+$('#infoClose').onclick = () => select(null);
+$('#prev').onclick = () => { const i = PARTS.findIndex(p => p.id === selected); select(PARTS[(i - 1 + PARTS.length) % PARTS.length].id, true); };
+$('#next').onclick = () => { const i = PARTS.findIndex(p => p.id === selected); select(PARTS[(i + 1) % PARTS.length].id, true); };
+
+let fly = null;
+function flyTo(pos, target, dur = 0.9, mode = 'io') {
+  fly = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos.clone(), t1: target.clone(), k: 0, dur, mode };
+}
+controls.addEventListener('start', () => { fly = null; });
+function focusPart(p) {
+  const box = new THREE.Box3().setFromObject(p.group);
+  const c = box.getCenter(V()), size = box.getSize(V()).length();
+  // conserva el acercamiento actual mientras la pieza se vea bien
+  const now = camera.position.distanceTo(controls.target);
+  const dist = THREE.MathUtils.clamp(now, Math.max(1.6, size * 1.1), Math.max(4, size * 2.6));
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  if (dir.y < 0.3) { dir.y = 0.3; dir.normalize(); }
+  flyTo(c.clone().addScaledVector(dir, dist), c, 0.55);
+}
+// doble clic en cualquier punto: centra ahí sin cambiar el acercamiento
+canvas.addEventListener('dblclick', e => {
+  ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects(scene.children, true)[0];
+  if (!hit) return;
+  const d = camera.position.distanceTo(controls.target);
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  flyTo(hit.point.clone().addScaledVector(dir, d), hit.point.clone(), 0.5);
+});
+
+/* ---------- Selección con el ratón ---------- */
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), tooltip = $('#tooltip');
+let downAt = null;
+function pickAt(e) {
+  ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects(pickables, false)[0];
+  return hit ? hit.object.userData.partId : null;
+}
+canvas.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; ensureAudio(); });
+// el cursor se procesa una vez por cuadro, no en cada evento
+let pendingMove = null;
+canvas.addEventListener('pointermove', e => { pendingMove = { clientX: e.clientX, clientY: e.clientY, buttons: e.buttons }; });
+function processHover() {
+  if (!pendingMove) return;
+  const e = pendingMove; pendingMove = null;
+  if (e.buttons) { tooltip.hidden = true; return; }
+  const id = pickAt(e);
+  if (id !== hovered) needsRender = true;
+  hovered = id;
+  canvas.style.cursor = id ? 'pointer' : 'grab';
+  if (id) { tooltip.textContent = partById[id].name; tooltip.style.left = e.clientX + 'px'; tooltip.style.top = e.clientY + 'px'; tooltip.hidden = false; }
+  else tooltip.hidden = true;
+}
+canvas.addEventListener('pointerleave', () => { hovered = null; tooltip.hidden = true; });
+canvas.addEventListener('pointerup', e => {
+  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  const id = pickAt(e);
+  if (id) select(id, true); else select(null);
+});
+addEventListener('keydown', e => { if (e.key === 'Escape') select(null); });
+
+/* ---------- Simulación ---------- */
+const lightEl = $('#light'), rvEl = $('#rv');
+let powered = true, relayOn = false, vdc = 13.3, v5 = 5.1, ledLevel = 0, dayLevel = -1, relayKick = 0, cycling = false, cycleT = 0, lastUi = -1;
+let vTarget = 13.3, dayTarget = 0.8, needsRender = true, explodeT = 99;
+const CYCLE_W = 0.42;   // ciclo día/noche de ~15 s (3 s menos que antes)
+const PIX_MAX = Math.min(devicePixelRatio, 2), PIX_MIN = 1.25;   // nunca baja de aquí: la nitidez se respeta
+let pixR = PIX_MAX, frameAcc = 0, frameN = 0;
+controls.addEventListener('change', () => { needsRender = true; });
+addEventListener('resize', () => { needsRender = true; });
+const E = { lux: 0, rL: 0, rv: 0, vb: 0, ic: 0, led: 0 };
+const fmt = (v, d) => v.toFixed(d).replace('.', ',');
+const fmtR = r => r >= 1e6 ? fmt(r / 1e6, 2) + ' MΩ' : r >= 1e3 ? fmt(r / 1e3, r < 1e4 ? 1 : 0) + ' kΩ' : Math.round(r) + ' Ω';
+
+let audio = null;
+function ensureAudio() { if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} } }
+function relayClick(on) {
+  if (!audio) return;
+  const n = 1800, buf = audio.createBuffer(1, n, 44100), d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (on ? 180 : 120));
+  const src = audio.createBufferSource(); src.buffer = buf;
+  const bp = audio.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = on ? 2400 : 3200; bp.Q.value = 1.2;
+  const gain = audio.createGain(); gain.gain.value = 0.6;
+  src.connect(bp).connect(gain).connect(audio.destination); src.start();
+}
+
+function solve() {
+  const s = +lightEl.value, v = +rvEl.value;
+  E.lux = Math.pow(10, -2 + 6 * s / 100);
+  E.rL = THREE.MathUtils.clamp(20000 * Math.pow(E.lux / 10, -0.7), 300, 1e6);
+  E.rv = 50 + v / 100 * 1950;
+  v5 = vdc >= 6 ? 5.1 : vdc * 0.85;
+  const vth = v5 * E.rv / (E.rL + E.rv), rth = E.rL * E.rv / (E.rL + E.rv);
+  const ib = Math.max(0, (vth - 0.7) / rth);
+  const icoil = Math.max(0, (v5 - 0.2) / 70);
+  E.ic = Math.min(ib * 150, icoil);
+  E.vb = vth < 0.65 ? vth : 0.65 + 0.25 * (1 - Math.exp(-(vth - 0.65) * 1.5));
+  const was = relayOn;
+  if (!relayOn && E.ic >= 0.0525 && v5 > 3.7) relayOn = true;
+  else if (relayOn && (E.ic < 0.0245 || v5 < 1.5)) relayOn = false;
+  if (was !== relayOn && lastUi >= 0) { relayClick(relayOn); relayKick = 1; }
+  E.led = (!relayOn && v5 > 1.9) ? Math.min(1, (v5 - 1.9) / 3.2) : 0;
+}
+
+function updateUi() {
+  $('#luxOut').textContent = (E.lux < 1 ? fmt(E.lux, 2) : E.lux < 10 ? fmt(E.lux, 1) : Math.round(E.lux).toLocaleString('es')) + ' lux';
+  $('#rvOut').textContent = fmtR(E.rv);
+  $('#vacOut').textContent = (powered ? '10,8' : '0') + ' V';
+  $('#vdcOut').textContent = fmt(vdc, 1) + ' V';
+  $('#vzOut').textContent = fmt(v5, 2) + ' V';
+  $('#rOut').textContent = fmtR(E.rL);
+  $('#vbOut').textContent = fmt(E.vb, 2) + ' V';
+  $('#icOut').textContent = fmt(E.ic * 1000, 1) + ' mA';
+  const st = $('#stateOut');
+  if (relayOn) { st.textContent = '☀️ Hay luz · Q2 conduce · relé activado · LED apagado'; st.classList.remove('night'); }
+  else { st.textContent = '🌙 Oscuro · Q2 cortado · relé en reposo (NC) · LED ENCENDIDO'; st.classList.add('night'); }
+}
+
+lightEl.addEventListener('input', () => { ensureAudio(); if (cycling) toggleCycle(); solve(); updateUi(); });
+rvEl.addEventListener('input', () => { ensureAudio(); solve(); updateUi(); });
+
+/* ---------- Botones ---------- */
+function toggleCycle() {
+  cycling = !cycling;
+  $('#btnCycle').classList.toggle('on', cycling);
+  $('#btnCycle').textContent = cycling ? '⏸ Detener ciclo' : '▶ Ciclo día/noche';
+  cycleT = Math.asin(THREE.MathUtils.clamp((+lightEl.value - 50) / 48, -1, 1)) / CYCLE_W;
+}
+$('#btnCycle').onclick = () => { ensureAudio(); toggleCycle(); };
+$('#btnExplode').onclick = e => { exploded = !exploded; explodeT = 0; e.currentTarget.classList.toggle('on', exploded); };
+$('#btnLabels').onclick = e => { labelsOn = !labelsOn; e.currentTarget.classList.toggle('on', labelsOn); needsRender = true; };
+$('#btnReset').onclick = () => { select(null); flyTo(HOME.pos.clone(), HOME.target.clone()); };
+// card plegable: se abre y se cierra al presionar el título
+function setParts(open) {
+  $('#parts').hidden = !open;
+  $('#brand').classList.toggle('open', open);
+  $('#brandHead').setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open && innerWidth <= 820) $('#info').hidden = true;
+}
+$('#brandHead').onclick = () => setParts($('#parts').hidden);
+$('#togParts').onclick = () => setParts($('#parts').hidden);
+// las dos cards de abajo también se pliegan
+for (const [head, body, card] of [['#dockHead', '#dockBody', '#dock'], ['#meterHead', '#meterBody', '#meter']]) {
+  $(head).onclick = () => {
+    const open = $(body).hidden;
+    $(body).hidden = !open;
+    $(card).classList.toggle('open', open);
+    $(head).setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+}
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+/* ---------- Bucle ---------- */
+const sunDay = new THREE.Color('#fff4e6'), sunNight = new THREE.Color('#8ea6ff'), tmpV = new THREE.Vector3();
+const bgDay = new THREE.Color('#ffffff'), bgNight = new THREE.Color('#dde2ef');   // el fondo también baja de noche
+const sphA = new THREE.Spherical(), sphB = new THREE.Spherical(), sphC = new THREE.Spherical(), tmpOff = new THREE.Vector3();
+const clock = new THREE.Clock();
+solve(); updateUi(); lastUi = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  const ease = k => 1 - Math.exp(-dt * k);
+
+  if (cycling) { cycleT += dt; lightEl.value = 50 + 48 * Math.sin(cycleT * CYCLE_W); }
+
+  vTarget = powered ? 13.3 : 0;
+  vdc += (vTarget - vdc) * ease(powered ? 6 : 0.9);
+  if (!powered && vdc < 0.02) vdc = 0;
+  solve();
+  if (t - lastUi > 0.1) { updateUi(); lastUi = t; }
+
+  // la vista explosionada sube (y baja) pieza por pieza, no todas de golpe
+  explodeT += dt;
+  PARTS.forEach((p, i) => {
+    const delay = (exploded ? i : PARTS.length - 1 - i) * 0.05;
+    if (explodeT < delay) return;
+    const step = ((exploded ? p.explode : 0) - p.group.position.y) * ease(7);
+    if (Math.abs(step) > 0.0004) { p.group.position.y += step; sun.shadow.needsUpdate = true; }
+  });
+
+  if (fly) {
+    fly.k = Math.min(1, fly.k + dt / fly.dur);
+    const k = fly.k;
+    const e = fly.mode === 'out' ? 1 - Math.pow(1 - k, 4)
+      : (k < 0.5 ? 4 * k ** 3 : 1 - Math.pow(-2 * k + 2, 3) / 2);
+    // la cámara viaja en arco alrededor del objetivo, no en línea recta
+    controls.target.lerpVectors(fly.t0, fly.t1, e);
+    sphA.setFromVector3(tmpOff.copy(fly.p0).sub(fly.t0));
+    sphB.setFromVector3(tmpOff.copy(fly.p1).sub(fly.t1));
+    let dTheta = sphB.theta - sphA.theta;
+    while (dTheta > Math.PI) dTheta -= Math.PI * 2;
+    while (dTheta < -Math.PI) dTheta += Math.PI * 2;
+    sphC.set(
+      THREE.MathUtils.lerp(sphA.radius, sphB.radius, e),
+      THREE.MathUtils.lerp(sphA.phi, sphB.phi, e),
+      sphA.theta + dTheta * e);
+    camera.position.copy(controls.target).add(tmpOff.setFromSpherical(sphC));
+    if (fly.k >= 1) fly = null;
+  }
+
+  ledLevel += (E.led - ledLevel) * ease(12);
+  dayTarget = +lightEl.value / 100;
+  const newDay = dayLevel < 0 ? dayTarget : dayLevel + (dayTarget - dayLevel) * ease(4);
+  if (Math.abs(newDay - dayLevel) > 0.001) {
+    dayLevel = newDay;
+    const d = THREE.MathUtils.smoothstep(dayLevel, 0.15, 0.85);
+    sun.intensity = 0.28 + 2.17 * d;      // noche 20 % más oscura
+    sun.color.copy(sunNight).lerp(sunDay, d);
+    sun.position.set(-7 + 17 * d, 5 + 20 * d, 8 + 8 * d);   // el sol sube y las sombras giran
+    sun.shadow.needsUpdate = true;
+    hemi.intensity = 0.144 + 0.486 * d;
+    fill.intensity = 0.12 + 0.38 * d;
+    for (const m of allMats) m.envMapIntensity = 0.24 + 0.76 * d;
+    scene.background.copy(bgNight).lerp(bgDay, d);
+  }
+  ledMat.emissiveIntensity = ledLevel * 3.2;
+  ledLight.intensity = ledLevel * 2.0;
+  ledGlow.material.opacity = ledLevel * (0.55 - 0.3 * dayLevel);   // el halo se nota más de noche
+
+  relayKick = Math.max(0, relayKick - dt * 5);
+  relayBody.position.x = colX(54) + Math.sin(t * 90) * 0.008 * relayKick;
+
+  processHover();
+  refreshHighlight(t);
+  controls.update();
+  if (!fly) clampTarget();
+
+  // dibuja solo cuando algo se mueve o cambia
+  const moving = !!fly || cycling || selected || relayKick > 0 ||
+    Math.abs(E.led - ledLevel) > 0.002 || Math.abs(dayTarget - dayLevel) > 0.002 ||
+    Math.abs(vTarget - vdc) > 0.005 ||
+    PARTS.some(p => Math.abs((exploded ? p.explode : 0) - p.group.position.y) > 0.002);
+  if (!moving && !needsRender) return;
+  needsRender = false;
+  renderer.render(scene, camera);
+
+  // resolución adaptativa: si el equipo sufre, baja; si le sobra, sube
+  if (dt < 0.06 && document.visibilityState === 'visible') { frameAcc += dt; frameN++; }
+  if (frameN >= 40) {
+    const avg = frameAcc / frameN; frameAcc = 0; frameN = 0;
+    if (avg > 0.028 && pixR > PIX_MIN) { pixR = Math.max(PIX_MIN, pixR - 0.25); renderer.setPixelRatio(pixR); }
+    else if (avg < 0.0135 && pixR < PIX_MAX) { pixR = Math.min(PIX_MAX, pixR + 0.25); renderer.setPixelRatio(pixR); }
+  }
+
+  for (const p of PARTS) {
+    const el = p.labelEl;
+    if (!labelsOn) { el.hidden = true; continue; }
+    tmpV.copy(p.anchor); tmpV.y += p.group.position.y; tmpV.project(camera);
+    if (tmpV.z > 1) { el.hidden = true; continue; }
+    el.hidden = false;
+    el.style.transform = `translate(${(tmpV.x * 0.5 + 0.5) * innerWidth}px,${(-tmpV.y * 0.5 + 0.5) * innerHeight}px) translate(-50%,-100%)`;
+  }
+}
+// entrada: la cámara se acomoda sola al abrir
+camera.position.set(HOME.pos.x + 5, HOME.pos.y * 1.45, HOME.pos.z * 1.3);
+flyTo(HOME.pos.clone(), HOME.target.clone(), 2.2, 'out');
+animate();
+document.getElementById('loading').hidden = true;
+</script>
+</body>
+</html>
